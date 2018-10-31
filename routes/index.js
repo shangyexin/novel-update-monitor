@@ -1,9 +1,8 @@
 var express = require('express');
 var router = express.Router();
+const utils = require('../middleware/utils');
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
+//校验微信服务器签名
+router.use('/api/wechat/', utils.verifyWechatSign());
 
 module.exports = router;
