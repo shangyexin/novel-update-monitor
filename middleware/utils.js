@@ -1,5 +1,10 @@
 const utils = {};
 const crypto = require('crypto');
+const request = require('request');
+const notice = require('./notice')
+
+const getTokenUlr = 'http://35.234.33.9/api/gettoken'
+const baseNotifyUrl = 'https://api.weixin.qq.com/cgi-bin/message/template/send?access_token='
 
 utils.verifyWechatSign = function () {
     return function (req, res) {
@@ -35,5 +40,40 @@ utils.verifyWechatSign = function () {
         }
     };
 }
+
+utils.notifyUser = function (url, data) {
+    request({
+        url: url,
+        method: "POST",
+        json: true,
+        headers: {"content-type": "application/json",},
+        body: data
+    }, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            console.log(body) // 请求成功的处理逻辑
+        }
+    });
+};
+
+utils.novelUpdate = function () {
+    return function (req, res) {
+        request(getTokenUlr, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                let accessToken = body;
+                let compleNotifyUrl = baseNotifyUrl + accessToken;
+                // console.log('compleNotifyUrl is %s', compleNotifyUrl);
+                notice.data.novelName.value = req.body.bookName;
+                notice.data.sectionName.value = req.body.latestChapter;
+                notice.data.updateTime.value = req.body.updateTime;
+                notice.url = req.body.latestUrl;
+                console.log(notice);
+                // 通知用户
+                utils.notifyUser(compleNotifyUrl, notice);
+            }
+        })
+        res.send('success');
+    };
+}
+
 
 module.exports = utils;
